@@ -1,6 +1,6 @@
 import React from 'react';
 
-const SwipeCard = ({ movie, onLike, onDislike }) => {
+const SwipeCard = ({ movie, onLike, onDislike, onClear}) => {
   if (!movie) return <div>Loading...</div>;
 
   // Automatically prep full URL or fallback
@@ -13,7 +13,7 @@ const SwipeCard = ({ movie, onLike, onDislike }) => {
       <img
         src={posterURL}
         alt={movie.title}
-        style={{ width: '300px', borderRadius: '12px' }}
+        style={{ width: '350px', borderRadius: '12px' }}
         onError={(e) => {
           console.error("Failed to load image:", posterURL);
           e.target.src = "https://via.placeholder.com/300x450?text=No+Image";
@@ -23,6 +23,7 @@ const SwipeCard = ({ movie, onLike, onDislike }) => {
       <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
         <button onClick={() => onDislike(movie)}>👎 Dislike</button>
         <button onClick={() => onLike(movie)}>❤️ Like</button>
+        <button onClick={() => onClear()}> (DEV TOOL) Clear Storage</button>
       </div>
     </div>
   );

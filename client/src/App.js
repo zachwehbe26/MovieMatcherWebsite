@@ -12,6 +12,7 @@ const sampleMovies = [
     title: "The Dark Knight",
     poster_path: "https://image.tmdb.org/t/p/w500/1hRoyzDtpgMU7Dz4JF22RANzQO7.jpg", // TMDB URL
   },
+
 ];
 
 function App() {
@@ -25,12 +26,20 @@ function App() {
 
   const handleLike = (movie) => {
     console.log("Liked:", movie.title);
+    saveLikedMovie(movie);
     nextMovie();
+
   };
 
   const handleDislike = (movie) => {
     console.log("Disliked:", movie.title);
+    saveDislikedMovie(movie)
     nextMovie();
+  };
+
+  const handleClear = () => {
+    localStorage.clear();
+    console.log("Cleared movie storage");
   };
 
   const nextMovie = () => {
@@ -41,6 +50,34 @@ function App() {
     }
   };
 
+  //Add liked movies to a liked web-cache for now
+  const saveLikedMovie = (movie) => {
+    let liked = JSON.parse(localStorage.getItem('likedMovies')) || [];
+
+    //only store movie id and title
+    const simplifiedMovie = {
+      id: movie.id,
+      title: movie.title
+    };
+
+    liked.push(simplifiedMovie);
+    localStorage.setItem('likedMovies', JSON.stringify(liked));
+  };
+
+  //Add disliked movies to a disliked web-cache for now
+  const saveDislikedMovie = (movie) => {
+    let disliked = JSON.parse(localStorage.getItem('dislikedMovies')) || [];
+
+    const simplifiedMovie = {
+      id: movie.id,
+      title: movie.title
+    };
+
+    disliked.push(simplifiedMovie);
+    localStorage.setItem('dislikedMovies', JSON.stringify(disliked));
+  };
+
+
   return (
     <div className="App" style={{ textAlign: 'center', marginTop: '50px' }}>
       <h1>🎬 Movie Matcher</h1>
@@ -48,6 +85,7 @@ function App() {
         movie={movies[currentIndex]}
         onLike={handleLike}
         onDislike={handleDislike}
+        onClear={handleClear}
       />
     </div>
   );
