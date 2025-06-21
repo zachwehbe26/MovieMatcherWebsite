@@ -5,6 +5,8 @@ import SwipeCard from './components/SwipeCard';
 function App() {
   const [movies, setMovies] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  //stop adding movies to storage once no more movies is shown
+  const[disableSelection, setDisableSelection] = useState(false)
 
   // Fetching movies from TMDB
 useEffect(() => {
@@ -48,11 +50,15 @@ useEffect(() => {
       setCurrentIndex(currentIndex + 1);
     } else {
       alert("No more movies!");
+      setDisableSelection(true)
     }
   };
 
   //Add liked movies to a liked web-cache for now
   const saveLikedMovie = (movie) => {
+    //Do not store movies once selection has ended
+    if( disableSelection ){ return; }
+
     let liked = JSON.parse(localStorage.getItem('likedMovies')) || [];
 
     //only store movie id and title
@@ -67,6 +73,9 @@ useEffect(() => {
 
   //Add disliked movies to a disliked web-cache for now
   const saveDislikedMovie = (movie) => {
+    //Do not store movies once selection has ended
+    if( disableSelection ){ return; }
+
     let disliked = JSON.parse(localStorage.getItem('dislikedMovies')) || [];
 
     const simplifiedMovie = {
