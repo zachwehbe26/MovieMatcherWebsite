@@ -61,6 +61,9 @@ useEffect(() => {
 
     let liked = JSON.parse(localStorage.getItem('likedMovies')) || [];
 
+    //check if movie if already in array
+    if(liked.includes(movie)){ return; }
+
     //only store movie id and title
     const simplifiedMovie = {
       id: movie.id,
@@ -77,6 +80,9 @@ useEffect(() => {
     if( disableSelection ){ return; }
 
     let disliked = JSON.parse(localStorage.getItem('dislikedMovies')) || [];
+
+    //check if movie if already in array
+    if(disliked.includes(movie)){ return; }
 
     const simplifiedMovie = {
       id: movie.id,
