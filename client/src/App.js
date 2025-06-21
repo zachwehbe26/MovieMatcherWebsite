@@ -1,28 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import SwipeCard from './components/SwipeCard';
 
-const sampleMovies = [
-  {
-    id: 1,
-    title: "Inception",
-    poster_path: "https://m.media-amazon.com/images/I/81p+xe8cbnL._AC_SY679_.jpg", // Working poster
-  },
-  {
-    id: 2,
-    title: "The Dark Knight",
-    poster_path: "https://image.tmdb.org/t/p/w500/1hRoyzDtpgMU7Dz4JF22RANzQO7.jpg", // TMDB URL
-  },
-
-];
 
 function App() {
   const [movies, setMovies] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  useEffect(() => {
-    setMovies(sampleMovies);
-    console.log("Loaded movies:", sampleMovies);
-  }, []);
+  // Fetching movies from TMDB
+useEffect(() => {
+  const fetchMovies = async () => {
+    const apiKey = process.env.REACT_APP_TMDB_API_KEY; // pulling API key from env file
+    const page = Math.floor(Math.random() * 500) +1; // Random page number between 1 and 500
+    try {
+      const res = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=en-US&page=${page}`);
+      const data = await res.json(); // Parse the response as JSON
+      const filteredMovies = data.results.filter(movie => movie.poster_path); // Filter out movies without a poster
+      console.log("Fetched movies:", filteredMovies); // Log the fetched movies
+      setMovies(filteredMovies); // Update state with filtered movies
+    } catch (error) {
+      console.error("Error fetching movies:", error); // Log any errors
+    }
+  };
+  fetchMovies(); // call the async function inside useEffect
+}, []);
+
 
   const handleLike = (movie) => {
     console.log("Liked:", movie.title);
