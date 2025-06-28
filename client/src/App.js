@@ -75,12 +75,13 @@ useEffect(() => {
     if(liked.includes(movie)){ return; }
 
     //only store movie id and title
+    /*
     const simplifiedMovie = {
       id: movie.id,
       title: movie.title
     };
-
-    liked.push(simplifiedMovie);
+    */
+    liked.push(movie);
     localStorage.setItem('likedMovies', JSON.stringify(liked));
   };
 
@@ -94,12 +95,13 @@ useEffect(() => {
     //check if movie if already in array
     if(disliked.includes(movie)){ return; }
 
+    /*
     const simplifiedMovie = {
       id: movie.id,
       title: movie.title
     };
-
-    disliked.push(simplifiedMovie);
+    */
+    disliked.push(movie);
     localStorage.setItem('dislikedMovies', JSON.stringify(disliked));
   };
 
