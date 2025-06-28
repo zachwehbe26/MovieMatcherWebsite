@@ -6,10 +6,9 @@ function App() {
   const [movies, setMovies] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   //stop adding movies to storage once no more movies is shown
-  const[disableSelection, setDisableSelection] = useState(false)
+  const [page, setPage] = useState(1);
 
-  // Fetching movies from TMDB
-useEffect(() => {
+  // fetch logic
   const fetchMovies = async () => {
     const apiKey = process.env.REACT_APP_TMDB_API_KEY; // pulling API key from env file
     const page = Math.floor(Math.random() * 500) +1; // Random page number between 1 and 500
@@ -17,12 +16,17 @@ useEffect(() => {
       const res = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=en-US&page=${page}`);
       const data = await res.json(); // Parse the response as JSON
       const filteredMovies = data.results.filter(movie => movie.poster_path); // Filter out movies without a poster
+      const limited = filteredMovies.slice(0, 5); // Takes only 5 at a time
       console.log("Fetched movies:", filteredMovies); // Log the fetched movies
-      setMovies(filteredMovies); // Update state with filtered movies
+      setMovies(prev => [...prev, ...limited]); // Update state with filtered movies
+      setPage(prev => prev + 1); // Increments page for next fetch
     } catch (error) {
       console.error("Error fetching movies:", error); // Log any errors
     }
   };
+
+  // Fetching movies from TMDB
+useEffect(() => {
   fetchMovies(); // call the async function inside useEffect
 }, []);
 
@@ -45,12 +49,18 @@ useEffect(() => {
     console.log("Cleared movie storage");
   };
 
+  const [disableSelection, setDisableSelection] = useState(false);
+
   const nextMovie = () => {
     if (currentIndex < movies.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      alert("No more movies!");
-      setDisableSelection(true)
+      fetchMovies().then(() => {
+        setCurrentIndex(currentIndex + 1); // move to next once fetched
+      }).catch(() => {
+        alert("No more movies!");
+        setDisableSelection(true)
+      });
     }
   };
 
