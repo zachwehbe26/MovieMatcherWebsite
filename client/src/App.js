@@ -14,12 +14,12 @@ function App() {
     const apiKey = process.env.REACT_APP_TMDB_API_KEY;
     const page = Math.floor(Math.random() * 500) + 1;
     try {
-      const res = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=en-US&page=${page}&include_adult=false`);
+      const res = await fetch(`https://api.themoviedb.org/3/movie/top_rated?api_key=${apiKey}&language=en-US&page=${page}&include_adult=false`);
       const data = await res.json();
 
       // Filter out movies with no poster and explicit adult content
       const filteredMovies = data.results.filter(
-        movie => movie.poster_path && movie.adult !== true
+        movie => movie.poster_path && movie.adult !== true && movie.original_language === "en"
       );
 
       const limited = filteredMovies.slice(0, 5);
@@ -82,7 +82,8 @@ function App() {
       console.log("Fetch URL:", `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${topGenres}&sort_by=popularity.desc&include_adult=false`);
       const data = await res.json();
       console.log("Fetched Recommendation Data:", data);
-      const filtered = data.results.filter(m => m.poster_path && !m.adult);
+      const filtered = data.results.filter(m => m.poster_path && !m.adult && m.original_language === "en"
+      );
       const recommended = filtered.slice(0, 5);
       localStorage.setItem('recommendedMovies', JSON.stringify(recommended));
       alert("Your movie recommendations are ready. Click the recommendations button to view!");
