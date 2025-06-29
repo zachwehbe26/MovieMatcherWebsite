@@ -12,9 +12,14 @@ function App() {
     const apiKey = process.env.REACT_APP_TMDB_API_KEY;
     const page = Math.floor(Math.random() * 500) + 1;
     try {
-      const res = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=en-US&page=${page}`);
+      const res = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=en-US&page=${page}&include_adult=false`);
       const data = await res.json();
-      const filteredMovies = data.results.filter(movie => movie.poster_path);
+
+      // Filter out movies with no poster and explicit adult content
+      const filteredMovies = data.results.filter(
+        movie => movie.poster_path && movie.adult !== true
+      );
+
       const limited = filteredMovies.slice(0, 5);
       console.log("Fetched movies:", filteredMovies);
       setMovies(prev => [...prev, ...limited]);
