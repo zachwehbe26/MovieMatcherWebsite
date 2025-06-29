@@ -7,6 +7,8 @@ function App() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [page, setPage] = useState(1);
   const [disableSelection, setDisableSelection] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [recommendedMovies, setRecommendedMovies] = useState([]);
 
   const fetchMovies = async () => {
     const apiKey = process.env.REACT_APP_TMDB_API_KEY;
@@ -99,8 +101,8 @@ function App() {
       alert("No recommendations available yet! Please like at least 15 movies");
       return;
     }
-    setMovies(recommended);
-    setCurrentIndex(0);
+    setRecommendedMovies(recommended.slice(0, 2)); // shows 2
+    setShowModal(true); //shows popup
   };
 
 
@@ -142,6 +144,31 @@ function App() {
               />
               <MovieDetails movie={movies[currentIndex]}/>
             </>
+        )}
+        {showModal && (
+            <div style={{
+              position: 'fixed',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              background: 'white',
+              padding: '20px',
+              borderRadius: '12px',
+              boxShadow: '0px 4px 15px rgba(0,0,0,0.3)',
+              zIndex: 999
+            }}>
+              <h2> Recommended Movies</h2>
+              { recommendedMovies.map(movie => (
+                  <div key={movie.id} style={{ marginBottom: '15px' }}>
+                    <h3>{movie.title}</h3>
+                    <img
+                      src={`https://image.tmdb.org/t/p/w200${movie.poster_path}`}
+                      alt={movie.title}
+                     />
+                  </div>
+                ))}
+              <button onClick={() => setShowModal(false)}>Close</button>
+            </div>
         )}
       </div>
   );
