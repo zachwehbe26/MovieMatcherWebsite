@@ -63,12 +63,58 @@ function App() {
     }
   };
 
+  const genRecommendations = async (likedMovies) => {
+    const genreCount = {};
+    likedMovies.forEach(movie => {
+      movie.genre_ids.forEach(id => {
+        genreCount[id] = (genreCount[id] || 0) + 1 // updates count for each genre ID
+      });
+    });
+    // Sorts genre ID and the amount of times it appears and puts it into an array in descending order
+    const sortedGenres = Object.entries(genreCount).sort((a, b) => b[1] - a[1]).map(entry => entry[0]);
+    const topGenres = sortedGenres.slice(0, 2).join(',') // takes top 2 genres for recommendation
+    try {
+      const apiKey = process.env.REACT_APP_TMDB_API_KEY;
+      const res = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${topGenres}&sort_by=popularity.desc&include_adult=false`);
+      console.log("Top Genres:", topGenres);
+      console.log("Fetch URL:", `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${topGenres}&sort_by=popularity.desc&include_adult=false`);
+      const data = await res.json();
+      console.log("Fetched Recommendation Data:", data);
+      const filtered = data.results.filter(m => m.poster_path && !m.adult);
+      const recommended = filtered.slice(0, 5);
+      localStorage.setItem('recommendedMovies', JSON.stringify(recommended));
+      alert("Your movie recommendations are ready. Click the recommendations button to view!");
+      console.log("Recommended Movies:", recommended);
+    } catch (error) {
+      console.error("Error fetching recommendations:", error);
+    }
+  };
+
+  const viewRecommendations = () => {
+    const recommended = JSON.parse(localStorage.getItem('recommendedMovies')) || [];
+    const liked = JSON.parse(localStorage.getItem('likedMovies')) || [];
+    console.log("LIKED MOVIES:", liked.length, liked);
+    console.log("RECOMMENDED MOVIES:", recommended.length, recommended);
+    if (recommended.length === 0) {
+      alert("No recommendations available yet! Please like at least 15 movies");
+      return;
+    }
+    setMovies(recommended);
+    setCurrentIndex(0);
+  };
+
+
   const saveLikedMovie = (movie) => {
     if (disableSelection) return;
     let liked = JSON.parse(localStorage.getItem('likedMovies')) || [];
-    if (liked.includes(movie)) return;
-    liked.push(movie);
-    localStorage.setItem('likedMovies', JSON.stringify(liked));
+    if (liked.find(m => m.id === movie.id)) return;
+    if (liked.length < 15) {
+      liked.push(movie); // push movies until likes hit five
+      localStorage.setItem('likedMovies', JSON.stringify(liked));
+      if(liked.length === 15) {
+        genRecommendations(liked); // generate recommendations for the movies in the liked array
+      }
+    }
   };
 
   const saveDislikedMovie = (movie) => {
@@ -80,20 +126,24 @@ function App() {
   };
 
   return (
-    <div className="App" style={{ textAlign: 'center', marginTop: '50px' }}>
-      <h1>🎬 Movie Matcher</h1>
-      {movies[currentIndex] && (
-        <>
-          <SwipeCard
-            movie={movies[currentIndex]}
-            onLike={handleLike}
-            onDislike={handleDislike}
-            onClear={handleClear}
-          />
-          <MovieDetails movie={movies[currentIndex]} />
-        </>
-      )}
-    </div>
+      <div className="App" style={{textAlign: 'center', marginTop: '50px'}}>
+        <h1>🎬 Movie Matcher</h1>
+        <button onClick={viewRecommendations} style={{marginBottom: '20px'}}>
+          View Recommendations
+        </button>
+        <p>You have liked {JSON.parse(localStorage.getItem("likedMovies"))?.length || 0} / 15 movies</p>
+        {movies[currentIndex] && (
+            <>
+              <SwipeCard
+                  movie={movies[currentIndex]}
+                  onLike={handleLike}
+                  onDislike={handleDislike}
+                  onClear={handleClear}
+              />
+              <MovieDetails movie={movies[currentIndex]}/>
+            </>
+        )}
+      </div>
   );
 }
 
