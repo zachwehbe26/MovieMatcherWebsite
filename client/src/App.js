@@ -65,13 +65,20 @@ function App() {
     }
   };
 
-  const genRecommendations = async (likedMovies) => {
+  const genRecommendations = async (likedMovies, dislikedMovies) => {
     const genreCount = {};
     likedMovies.forEach(movie => {
       movie.genre_ids.forEach(id => {
-        genreCount[id] = (genreCount[id] || 0) + 1 // updates count for each genre ID
+        genreCount[id] = (genreCount[id] || 0) + 1 // updates count positively for each genre ID
       });
     });
+
+    dislikedMovies.forEach(movie => {
+       movie.genre_ids.forEach(id => {
+         genreCount[id] = (genreCount[id] || 0) - 1 // updates count negatively for each genre ID
+       });
+    });
+
     // Sorts genre ID and the amount of times it appears and puts it into an array in descending order
     const sortedGenres = Object.entries(genreCount).sort((a, b) => b[1] - a[1]).map(entry => entry[0]);
     const topGenres = sortedGenres.slice(0, 2).join(',') // takes top 2 genres for recommendation
@@ -115,7 +122,8 @@ function App() {
       liked.push(movie); // push movies until likes hit five
       localStorage.setItem('likedMovies', JSON.stringify(liked));
       if(liked.length === 15) {
-        genRecommendations(liked); // generate recommendations for the movies in the liked array
+        const disliked = JSON.parse(localStorage.getItem('dislikedMovies')) || [];    //accounts for disliked movies in genRecommendations
+        genRecommendations(liked, disliked); // generate recommendations for the movies in the liked array
       }
     }
   };
