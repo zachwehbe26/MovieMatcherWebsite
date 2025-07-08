@@ -2,13 +2,18 @@ import React, { useState, useEffect } from 'react';
 import SwipeCard from './components/SwipeCard';
 import MovieDetails from './components/MovieDetails';
 
+import Login from './components/Login';
+
 function App() {
+
   const [movies, setMovies] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [page, setPage] = useState(1);
   const [disableSelection, setDisableSelection] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [recommendedMovies, setRecommendedMovies] = useState([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
 
   const fetchMovies = async () => {
     const apiKey = process.env.REACT_APP_TMDB_API_KEY;
@@ -34,6 +39,12 @@ function App() {
   useEffect(() => {
     fetchMovies();
   }, []);
+
+
+
+  if (!isLoggedIn) {
+    return <Login onLogin={() => setIsLoggedIn(true)} />;
+  }
 
   const handleLike = (movie) => {
     console.log("Liked:", movie.title);
@@ -152,6 +163,7 @@ function App() {
                   onClear={handleClear}
               />
               <MovieDetails movie={movies[currentIndex]}/>
+              
             </>
         )}
         {showModal && (
@@ -181,6 +193,5 @@ function App() {
         )}
       </div>
   );
-}
-
+};
 export default App;
