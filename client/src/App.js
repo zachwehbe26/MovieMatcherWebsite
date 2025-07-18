@@ -15,6 +15,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
 
+
   const fetchMovies = async () => {
     const apiKey = process.env.REACT_APP_TMDB_API_KEY;
     const page = Math.floor(Math.random() * 500) + 1;
@@ -41,7 +42,7 @@ function App() {
   }, []);
 
 
-
+  //display login if not logged in
   if (!isLoggedIn) {
     return <Login onLogin={() => setIsLoggedIn(true)} />;
   }
