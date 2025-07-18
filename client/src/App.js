@@ -44,7 +44,7 @@ function App() {
 
   //display login if not logged in
   if (!isLoggedIn) {
-    return <Login onLogin={() => setIsLoggedIn(true)} />;
+    return <Login setIsLoggedIn={setIsLoggedIn} />;
   }
 
   const handleLike = (movie) => {

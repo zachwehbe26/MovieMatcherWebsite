@@ -19,6 +19,15 @@ You may also see any lint errors in the console.
 Launches the test runner in the interactive watch mode.\
 See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
+## Running the Auth server for logging in and registering
+
+Open a new terminal in client/server 
+run `npm init -y` and `npm install express express-session body-parser cors` in the server folder.
+Start the server by typing `node index.js` 
+
+run the program in a seperate cell using `npm start`
+
+
 ### `npm run build`
 
 Builds the app for production to the `build` folder.\
