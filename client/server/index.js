@@ -30,7 +30,7 @@ app.post('/register', (req, res) => {
   if (users[username]) {
     return res.status(409).json({ error: 'User already exists' });
   }
-  users[username] = { password };
+  users[username] = { password, likedMovies: [], dislikedMovies: [] };
   req.session.user = username;
   res.json({ success: true });
 });
@@ -51,6 +51,57 @@ app.get('/me', (req, res) => {
   } else {
     res.status(401).json({ error: 'Not logged in' });
   }
+});
+
+// --- movie endpoints ---
+//load liked and disliked movies for the logged-in user
+app.get('/movies', (req, res) => {
+  const username = req.session.user;
+  if (!username || !users[username]) {
+    return res.status(401).json({ error: 'Not logged in' });
+  }
+  const { likedMovies, dislikedMovies } = users[username];
+  res.json({ likedMovies, dislikedMovies });
+});
+
+// Store liked movies in users object on server
+app.post('/movies/like', (req, res) => {
+  const username = req.session.user;
+  if (!username || !users[username]) {
+    return res.status(401).json({ error: 'Not logged in' });
+  }
+  const movie = req.body.movie;
+  if (!movie) return res.status(400).json({ error: 'Missing movie' });
+  const user = users[username];
+  if (!user.likedMovies.find(m => m.id === movie.id)) {
+    user.likedMovies.push(movie);
+  }
+  res.json({ likedMovies: user.likedMovies });
+});
+
+// Store disliked movies in users object on server
+app.post('/movies/dislike', (req, res) => {
+  const username = req.session.user;
+  if (!username || !users[username]) {
+    return res.status(401).json({ error: 'Not logged in' });
+  }
+  const movie = req.body.movie;
+  if (!movie) return res.status(400).json({ error: 'Missing movie' });
+  const user = users[username];
+  if (!user.dislikedMovies.find(m => m.id === movie.id)) {
+    user.dislikedMovies.push(movie);
+  }
+  res.json({ dislikedMovies: user.dislikedMovies });
+});
+
+app.post('/movies/clear', (req, res) => {
+  const username = req.session.user;
+  if (!username || !users[username]) {
+    return res.status(401).json({ error: 'Not logged in' });
+  }
+  users[username].likedMovies = [];
+  users[username].dislikedMovies = [];
+  res.json({ success: true });
 });
 
 app.post('/logout', (req, res) => {
