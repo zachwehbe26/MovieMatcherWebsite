@@ -1,14 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import SwipeCard from './components/SwipeCard';
 import MovieDetails from './components/MovieDetails';
+import Login from './components/Login';
 
 function App() {
+
   const [movies, setMovies] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [page, setPage] = useState(1);
   const [disableSelection, setDisableSelection] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [recommendedMovies, setRecommendedMovies] = useState([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [likedMovies, setLikedMovies] = useState([]);
+  const [dislikedMovies, setDislikedMovies] = useState([]);
+
+
 
   const fetchMovies = async () => {
     const apiKey = process.env.REACT_APP_TMDB_API_KEY;
@@ -35,21 +42,90 @@ function App() {
     fetchMovies();
   }, []);
 
-  const handleLike = (movie) => {
-    console.log("Liked:", movie.title);
-    saveLikedMovie(movie);
+  // Fetch liked/disliked movies from server after login
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetch('http://localhost:5000/movies', {
+        credentials: 'include',
+      })
+        .then(res => res.json())
+        .then(data => {
+          setLikedMovies(data.likedMovies || []);
+          setDislikedMovies(data.dislikedMovies || []);
+        })
+        .catch(() => {
+          setLikedMovies([]);
+          setDislikedMovies([]);
+        });
+    }
+  }, [isLoggedIn]);
+
+
+  //display login if not logged in
+  if (!isLoggedIn) {
+    return <Login setIsLoggedIn={setIsLoggedIn} />;
+  }
+
+  const handleLike = async (movie) => {
+    if (disableSelection) return;
+    if (likedMovies.find(m => m.id === movie.id)) return;
+    if (likedMovies.length < 15) {
+      //no longer store movies in local storage
+      //movies stored in users object on server
+      try {
+        //send movie to server
+        const res = await fetch('http://localhost:5000/movies/like', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ movie })
+        });
+        const data = await res.json();
+        setLikedMovies(data.likedMovies);
+        if (data.likedMovies.length === 15) {
+          genRecommendations(data.likedMovies, dislikedMovies);
+        }
+      } catch (error) {
+        console.error('Error liking movie:', error);
+      }
+    }
     nextMovie();
   };
 
-  const handleDislike = (movie) => {
-    console.log("Disliked:", movie.title);
-    saveDislikedMovie(movie);
+  const handleDislike = async (movie) => {
+    if (disableSelection) return;
+    if (dislikedMovies.find(m => m.id === movie.id)) return;
+    //store disliked movies in users object on server
+    try {
+      //send movie to server
+      const res = await fetch('http://localhost:5000/movies/dislike', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ movie })
+      });
+      const data = await res.json();
+      setDislikedMovies(data.dislikedMovies);
+    } catch (error) {
+      console.error('Error disliking movie:', error);
+    }
     nextMovie();
   };
 
-  const handleClear = () => {
-    localStorage.clear();
-    console.log("Cleared movie storage");
+  const handleClear = async () => {
+    try {
+      await fetch('http://localhost:5000/movies/clear', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      setLikedMovies([]);
+      setDislikedMovies([]);
+      setRecommendedMovies([]);
+      setShowModal(false);
+      console.log('Cleared movie storage');
+    } catch (error) {
+      console.error('Error clearing movies:', error);
+    }
   };
 
   const nextMovie = () => {
@@ -65,17 +141,17 @@ function App() {
     }
   };
 
-  const genRecommendations = async (likedMovies, dislikedMovies) => {
+  const genRecommendations = async (liked, disliked) => {
     const genreCount = {};
-    likedMovies.forEach(movie => {
+    liked.forEach(movie => {
       movie.genre_ids.forEach(id => {
-        genreCount[id] = (genreCount[id] || 0) + 1 // updates count positively for each genre ID
+        genreCount[id] = (genreCount[id] || 0) + 1 //updates count positively for each genre ID
       });
     });
 
-    dislikedMovies.forEach(movie => {
+    disliked.forEach(movie => {
        movie.genre_ids.forEach(id => {
-         genreCount[id] = (genreCount[id] || 0) - 1 // updates count negatively for each genre ID
+         genreCount[id] = (genreCount[id] || 0) - 1 //updates count negatively for each genre ID
        });
     });
 
@@ -92,7 +168,7 @@ function App() {
       const filtered = data.results.filter(m => m.poster_path && !m.adult && m.original_language === "en"
       );
       const recommended = filtered.slice(0, 5);
-      localStorage.setItem('recommendedMovies', JSON.stringify(recommended));
+      setRecommendedMovies(recommended);
       alert("Your movie recommendations are ready. Click the recommendations button to view!");
       console.log("Recommended Movies:", recommended);
     } catch (error) {
@@ -101,39 +177,13 @@ function App() {
   };
 
   const viewRecommendations = () => {
-    const recommended = JSON.parse(localStorage.getItem('recommendedMovies')) || [];
-    const liked = JSON.parse(localStorage.getItem('likedMovies')) || [];
-    console.log("LIKED MOVIES:", liked.length, liked);
-    console.log("RECOMMENDED MOVIES:", recommended.length, recommended);
-    if (recommended.length === 0) {
-      alert("No recommendations available yet! Please like at least 15 movies");
+    // Use recommendedMovies from state
+    if (recommendedMovies.length === 0) {
+      alert('No recommendations available yet! Please like at least 15 movies');
       return;
     }
-    setRecommendedMovies(recommended.slice(0, 2)); // shows 2
-    setShowModal(true); //shows popup
-  };
-
-
-  const saveLikedMovie = (movie) => {
-    if (disableSelection) return;
-    let liked = JSON.parse(localStorage.getItem('likedMovies')) || [];
-    if (liked.find(m => m.id === movie.id)) return;
-    if (liked.length < 15) {
-      liked.push(movie); // push movies until likes hit five
-      localStorage.setItem('likedMovies', JSON.stringify(liked));
-      if(liked.length === 15) {
-        const disliked = JSON.parse(localStorage.getItem('dislikedMovies')) || [];    //accounts for disliked movies in genRecommendations
-        genRecommendations(liked, disliked); // generate recommendations for the movies in the liked array
-      }
-    }
-  };
-
-  const saveDislikedMovie = (movie) => {
-    if (disableSelection) return;
-    let disliked = JSON.parse(localStorage.getItem('dislikedMovies')) || [];
-    if (disliked.includes(movie)) return;
-    disliked.push(movie);
-    localStorage.setItem('dislikedMovies', JSON.stringify(disliked));
+    setRecommendedMovies(recommendedMovies.slice(0, 2));
+    setShowModal(true);
   };
 
   return (
@@ -142,7 +192,7 @@ function App() {
         <button onClick={viewRecommendations} style={{marginBottom: '20px'}}>
           View Recommendations
         </button>
-        <p>You have liked {JSON.parse(localStorage.getItem("likedMovies"))?.length || 0} / 15 movies</p>
+        <p>You have liked {likedMovies.length} / 15 movies</p>
         {movies[currentIndex] && (
             <>
               <SwipeCard
@@ -152,6 +202,7 @@ function App() {
                   onClear={handleClear}
               />
               <MovieDetails movie={movies[currentIndex]}/>
+              
             </>
         )}
         {showModal && (
@@ -181,6 +232,5 @@ function App() {
         )}
       </div>
   );
-}
-
+};
 export default App;
