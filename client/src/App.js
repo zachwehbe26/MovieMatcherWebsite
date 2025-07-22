@@ -145,13 +145,13 @@ function App() {
     const genreCount = {};
     liked.forEach(movie => {
       movie.genre_ids.forEach(id => {
-        genreCount[id] = (genreCount[id] || 0) + 1 // updates count positively for each genre ID
+        genreCount[id] = (genreCount[id] || 0) + 1 //updates count positively for each genre ID
       });
     });
 
     disliked.forEach(movie => {
        movie.genre_ids.forEach(id => {
-         genreCount[id] = (genreCount[id] || 0) - 1 // updates count negatively for each genre ID
+         genreCount[id] = (genreCount[id] || 0) - 1 //updates count negatively for each genre ID
        });
     });
 
@@ -168,7 +168,7 @@ function App() {
       const filtered = data.results.filter(m => m.poster_path && !m.adult && m.original_language === "en"
       );
       const recommended = filtered.slice(0, 5);
-      localStorage.setItem('recommendedMovies', JSON.stringify(recommended));
+      setRecommendedMovies(recommended);
       alert("Your movie recommendations are ready. Click the recommendations button to view!");
       console.log("Recommended Movies:", recommended);
     } catch (error) {
