@@ -60,6 +60,8 @@
 
 .description-overlay p {
   margin-bottom: 0.5rem;
+  text-align: left;
+  padding: 1rem;
 }
 
 .description-overlay small {
